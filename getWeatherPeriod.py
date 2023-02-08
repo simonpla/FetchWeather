@@ -18,6 +18,7 @@ parser.add_argument('-s', '--start', default="01.10.2022", type=str)
 parser.add_argument('-e', '--end', default="05.10.2022", type=str)
 parser.add_argument('-n', '--name', default="Odense,DK", type=str)
 parser.add_argument('-i', '--index', default="0", type=str)
+parser.add_argument('-t', '--tense', default="history", type=str)  # history/future
 
 
 def parse_date(date_string):
@@ -54,6 +55,14 @@ def to_unix(python_date):
     """
     return int(python_date.timestamp())
 
+def to_python(unix_date):
+    """
+    Convert unix timestamp to python date
+    :param unix_date:
+    :return:
+    """
+    return datetime.fromtimestamp(int(unix_date))
+
 
 def to_date_string(python_date):
     """
@@ -75,6 +84,21 @@ def fetch_historical_data(key, start, end, loc):
     """
     base_url = 'https://history.openweathermap.org/data/2.5/history/city?'
     arguments = dict(appid=key, units='metric', lat=loc[0], lon=loc[1], type='hour', start=start, end=end)
+    request_url = base_url + urllib.parse.urlencode(arguments)
+
+    with urllib.request.urlopen(request_url) as request:
+        return request.read().decode("utf8")
+
+
+def fetch_future_data(key, loc):
+    """
+    Download json data for 4 days into the future
+    :param loc: location with lat and lon as tuple
+    :param key: api key
+    :return:
+    """
+    base_url = 'https://pro.openweathermap.org/data/2.5/forecast/hourly?'
+    arguments = dict(appid=key, units='metric', lat=loc[0], lon=loc[1])
     request_url = base_url + urllib.parse.urlencode(arguments)
 
     with urllib.request.urlopen(request_url) as request:
@@ -116,18 +140,48 @@ if __name__ == '__main__':
     
     location = get_location_by_name(args.api_key, args.name, args.index)
 
-    dates = to_interval(parse_date(args.start), parse_date(args.end))
-    for date in dates:
-        file_name = f'{args.out_dir}/{to_date_string(date)}-{args.name}-hist.json'
+    if args.tense == 'history':
+        dates = to_interval(parse_date(args.start), parse_date(args.end))
+        for date in dates:
+            file_name = f'{args.out_dir}/{to_date_string(date)}-{args.name}-hist.json'
 
-        if exists(file_name):
-            print(f'Already downloaded: {to_date_string(date)}')
-            continue
+            if exists(file_name):
+                print(f'Already downloaded: {to_date_string(date)}')
+                continue
 
-        print(f"Downloading: {to_date_string(date)} ...")
+            print(f"Downloading: {to_date_string(date)} ...")
 
-        end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
-        json_str = fetch_historical_data(args.api_key, to_unix(date), to_unix(end_of_day), location)
+            end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
+            json_str = fetch_historical_data(args.api_key, to_unix(date), to_unix(end_of_day), location)
 
-        f = open(file_name, 'w')
-        f.write(json_str)
+            f = open(file_name, 'w')
+            f.write(json_str)
+            f.close()
+    else:
+        future_data = fetch_future_data(args.api_key, location)
+        future_data_json = json.loads(future_data)['list']
+
+        # get start date
+        start = to_python(future_data_json[0]['dt'])
+        # end date
+        end = start + timedelta(days=4)
+
+        dates = to_interval(start, end)
+        for i, date in enumerate(dates):
+            file_name = f'{args.out_dir}/{to_date_string(date)}-{args.name}-fut.json'
+
+            if exists(file_name):
+                print(f'Already downloaded: {to_date_string(date)}')
+                continue
+
+            print(f"Downloading: {to_date_string(date)} ...")
+
+            f = open(file_name, 'a')
+
+            f.write('[')
+            for j in range(24):  # 24 hours a day
+                f.write(json.dumps(future_data_json[i + j]))  # write data for one hour
+                if j != 23:
+                    f.write(',')  # add comma between hours
+            f.write(']')
+            f.close()
