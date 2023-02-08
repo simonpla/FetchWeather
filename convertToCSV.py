@@ -10,17 +10,24 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-d', '--directory', default="out", dest='in_dir')
 parser.add_argument('-o', '--out', default="training.csv", type=str)
+parser.add_argument('-t', '--tense', default="history", type=str)  # history, future
 
 params_header = ['location', 'date', 'temp', 'wind', 'gust', 'clouds', 'weatherId', 'weatherGroup', 'rain', 'snow']
 
 
-def list_weather_data_files(data_dir):
+def list_weather_data_files(data_dir, tense):
     """
     Reads all json file names from given dir into list
     :return:
     """
     weather_data = []
-    for json_file_weather in glob.glob(f'{data_dir}/*.json'):
+
+    if tense == 'history':
+        file_pattern = f'{data_dir}/*-hist.json'
+    else:
+        file_pattern = f'{data_dir}/*-fut.json'
+
+    for json_file_weather in glob.glob(file_pattern):
         weather_data.append(json_file_weather)
     return weather_data
 
@@ -37,7 +44,7 @@ def load_weather_json(file):
     return json.loads(contents)['list']
 
 
-def get_params(hour_data, ):
+def get_params(hour_data, weather_str):
     """
     Filters out the relevant data, optionally assigns -1 to missing parameters
     :param hour_data: which hour
@@ -55,7 +62,7 @@ def get_params(hour_data, ):
         snow = -1
 
     return [
-        weather_data_str.split('-')[1].replace(',', ' ') or -1,  # location name, replace comma with space
+        weather_str.split('-')[1].replace(',', ' ') or -1,  # location name, replace comma with space
         hour_data['dt'],  # date in unix format
         hour_data['main']['temp'],  # temperature
         hour_data['wind']['speed'],  # wind speed
@@ -78,12 +85,12 @@ if __name__ == '__main__':
 
         writer.writerow(params_header)  # write header
 
-        for weather_data_str in list_weather_data_files(args.in_dir):
+        for weather_data_str in list_weather_data_files(args.in_dir, args.tense):
             weather_data_json = load_weather_json(weather_data_str)  # load contents from json file
 
             for hour in range(len(weather_data_json)):
-                params = get_params(weather_data_json[hour])  # get relevant data from json
+                params = get_params(weather_data_json[hour], weather_data_str)  # get relevant data from json
                 writer.writerow(params)  # write data for every hour of the day
                 count = count + 1
 
-    print (f"Written {count} records.")
+    print(f"Written {count} records.")

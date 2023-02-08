@@ -61,7 +61,7 @@ def to_date_string(python_date):
     :param python_date:
     :return:
     """
-    return python_date.strftime('%Y.%m.%d')
+    return python_date.strftime('%Y%m%d')
 
 
 def fetch_historical_data(key, start, end, loc):

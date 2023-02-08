@@ -12,7 +12,8 @@ fetches weather from past and future, inserts relevant information into csv data
 |`--index`|`-i`|index of cities from list used|`0`|  
 
 ## convertToCSV
-|name|short|explanation|default|                                      
-|----|-----|-----------|-------|                                                                                                
-|`--directory`|`-d`|Directory for JSON files|out|
-|`--out`|`-o`|CSV Database file name|training.csv|
+| name          | short | explanation                  | default      |                                      
+|---------------|-------|------------------------------|--------------|                                                                                                
+| `--directory` | `-d`  | Directory for JSON files     | out          |
+| `--out`       | `-o`  | CSV Database file name       | training.csv |
+| `--tense`     | `-t`  | Use data from future or past | history      |
