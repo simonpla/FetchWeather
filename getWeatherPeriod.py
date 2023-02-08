@@ -164,11 +164,16 @@ if __name__ == '__main__':
         # get start date
         start = to_python(future_data_json[0]['dt'])
         # end date
-        end = start + timedelta(days=4)
+        end = start + timedelta(days=3)
+
+        hours_in_forecast_days = [24 - start.hour, 24, 24, end.hour]
 
         dates = to_interval(start, end)
+        counter = 1  # used hours from json
         for i, date in enumerate(dates):
             file_name = f'{args.out_dir}/{to_date_string(date)}-{args.name}-fut.json'
+
+            print(start.strftime("%m/%d/%Y, %H:%M:%S"), end.strftime("%m/%d/%Y, %H:%M:%S"), date.strftime("%m/%d/%Y, %H:%M:%S"))
 
             if exists(file_name):
                 print(f'Already downloaded: {to_date_string(date)}')
@@ -178,9 +183,10 @@ if __name__ == '__main__':
 
             with open(file_name, 'a') as f:
                 f.write('[')
-                for j in range(24):  # 24 hours a day
-                    f.write(json.dumps(future_data_json[i + j]))  # write data for one hour
-                    if j != 23:
+                for j in range(hours_in_forecast_days[i]):
+                    f.write(json.dumps(future_data_json[counter]))  # write data for one hour
+                    if j != hours_in_forecast_days[i] - 1:
                         f.write(',')  # add comma between hours
+                    counter += 1
                 f.write(']')
 
