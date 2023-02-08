@@ -176,12 +176,11 @@ if __name__ == '__main__':
 
             print(f"Downloading: {to_date_string(date)} ...")
 
-            f = open(file_name, 'a')
+            with open(file_name, 'a') as f:
+                f.write('[')
+                for j in range(24):  # 24 hours a day
+                    f.write(json.dumps(future_data_json[i + j]))  # write data for one hour
+                    if j != 23:
+                        f.write(',')  # add comma between hours
+                f.write(']')
 
-            f.write('[')
-            for j in range(24):  # 24 hours a day
-                f.write(json.dumps(future_data_json[i + j]))  # write data for one hour
-                if j != 23:
-                    f.write(',')  # add comma between hours
-            f.write(']')
-            f.close()
