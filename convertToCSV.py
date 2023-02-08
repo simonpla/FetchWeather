@@ -14,13 +14,13 @@ parser.add_argument('-o', '--out', default="training.csv", type=str)
 params_header = ['location', 'date', 'temp', 'wind', 'gust', 'clouds', 'weatherId', 'weatherGroup', 'rain', 'snow']
 
 
-def list_weather_data_files():
+def list_weather_data_files(data_dir):
     """
     Reads all json file names from given dir into list
     :return:
     """
     weather_data = []
-    for json_file_weather in glob.glob(f'{args.in_dir}/*.json'):
+    for json_file_weather in glob.glob(f'{data_dir}/*.json'):
         weather_data.append(json_file_weather)
     return weather_data
 
@@ -72,14 +72,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
+    count = 0
     with open(args.out, 'w', encoding='UTF8', newline='') as weather_dest:
         writer = csv.writer(weather_dest)
 
         writer.writerow(params_header)  # write header
 
-        for weather_data_str in list_weather_data_files():
+        for weather_data_str in list_weather_data_files(args.in_dir):
             weather_data_json = load_weather_json(weather_data_str)  # load contents from json file
 
-            for hour in range(24):
+            for hour in range(len(weather_data_json)):
                 params = get_params(weather_data_json[hour])  # get relevant data from json
                 writer.writerow(params)  # write data for every hour of the day
+                count = count + 1
+
+    print (f"Written {count} records.")
