@@ -129,5 +129,5 @@ if __name__ == '__main__':
         end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
         json_str = fetch_historical_data(args.api_key, to_unix(date), to_unix(end_of_day), location)
 
-        f = open(file_name, 'w')
-        f.write(json_str)
+        with open(file_name, 'w') as f:
+            f.write(json_str)

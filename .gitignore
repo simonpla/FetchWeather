@@ -1,3 +1,4 @@
 venv
 out
-training.csv
+**/*.csv
+**/*.json
