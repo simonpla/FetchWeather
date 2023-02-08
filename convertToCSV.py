@@ -32,7 +32,7 @@ def list_weather_data_files(data_dir, tense):
     return weather_data
 
 
-def load_weather_json(file):
+def load_weather_json(file, tense):
     """
     Reads json file and loads it using json lib
     :param file: file location
@@ -41,12 +41,16 @@ def load_weather_json(file):
     f = open(file, 'r')
     contents = f.read()
     f.close()
-    return json.loads(contents)['list']
+    if tense == 'history':
+        return json.loads(contents)['list']
+    else:
+        return json.loads(contents)
 
 
 def get_params(hour_data, weather_str):
     """
     Filters out the relevant data, optionally assigns -1 to missing parameters
+    :param weather_str:
     :param hour_data: which hour
     :return:
     """
@@ -86,7 +90,7 @@ if __name__ == '__main__':
         writer.writerow(params_header)  # write header
 
         for weather_data_str in list_weather_data_files(args.in_dir, args.tense):
-            weather_data_json = load_weather_json(weather_data_str)  # load contents from json file
+            weather_data_json = load_weather_json(weather_data_str, args.tense)  # load contents from json file
 
             for hour in range(len(weather_data_json)):
                 params = get_params(weather_data_json[hour], weather_data_str)  # get relevant data from json
