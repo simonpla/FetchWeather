@@ -2,3 +2,4 @@ venv
 out
 **/*.csv
 **/*.json
+*.log
