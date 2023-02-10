@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     count = 0
     with open(args.out, 'w', encoding='UTF8', newline='') as weather_dest:
-        writer = csv.writer(weather_dest)
+        writer = csv.writer(weather_dest, lineterminator="\n")
 
         writer.writerow(params_header)  # write header
 
